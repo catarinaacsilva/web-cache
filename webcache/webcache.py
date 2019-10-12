@@ -9,7 +9,6 @@ __status__ = 'Development'
 
 import logging
 import os
-import hashlib
 import time
 import gzip
 from selenium import webdriver
@@ -47,7 +46,6 @@ class WebCache(object):
         options = Options()
         options.headless = True
         self.driver = webdriver.Firefox(options=options)
-        self.hash = hashlib.sha128
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         

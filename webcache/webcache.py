@@ -52,7 +52,7 @@ class WebCache(object):
     def get(self, url: str, refresh=False):
         file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_32(url)))
         if os.path.exists(file_name):
-            creation_time = time.ctime(os.path.getmtime(file_name))
+            creation_time = os.path.getmtime(file_name)
             alive_time = time.time()-creation_time
             if alive_time > ttl:
                 html = load_url(url, self.path, self.driver)

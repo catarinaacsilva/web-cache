@@ -15,6 +15,9 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
+logger = logging.getLogger('WC')
+
+
 def fnv1a_32(string: str, seed=0):
     """
     Returns: The FNV-1a (alternate) hash of a given string
@@ -32,8 +35,11 @@ def fnv1a_32(string: str, seed=0):
 
 
 def load_url(url: str, path: str, driver: webdriver):
+    logger.debug('Load %s and store it on %s', url, path)
     file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
+    logger.debug('Filename = %s', file_name)
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    logger.debug('HTML = %s', html)
     with gzip.open(file_name, 'w') as f:
         f.write(html)
     return html

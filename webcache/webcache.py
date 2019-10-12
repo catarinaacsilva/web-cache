@@ -15,13 +15,13 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
-def fnv1a_64(string: str, seed=0):
+def fnv1a_32(string: str, seed=0):
     """
     Returns: The FNV-1a (alternate) hash of a given string
     """
     #Constants
-    FNV_prime = 1099511628211
-    offset_basis = 14695981039346656037
+    FNV_prime = 16777619
+    offset_basis = 2166136261
 
     #FNV-1a Hash Function
     hash = offset_basis + seed
@@ -32,7 +32,7 @@ def fnv1a_64(string: str, seed=0):
 
 
 def load_url(url: str, path: str, driver: webdriver):
-    file_name = '{}/{}.gz'.format(path, hex(fnv1a_64(url)))
+    file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
     with gzip.open(file_name, 'wb') as f:
         f.write(html)
@@ -50,7 +50,7 @@ class WebCache(object):
             os.makedirs(self.path)
         
     def get(self, url: str, refresh=False):
-        file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_64(url)))
+        file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_32(url)))
         if os.path.exists(file_name):
             creation_time = time.ctime(os.path.getmtime(file_name))
             alive_time = time.time()-creation_time

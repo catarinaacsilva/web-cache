@@ -32,7 +32,7 @@ def fnv1a_64(string: str, seed=0):
 
 
 def load_url(url: str, path: str, driver: webdriver):
-    file_name = '{}/{}.gz'.format(path, fnv1a_64(url))
+    file_name = '{}/{}.gz'.format(path, hex(fnv1a_64(url)))
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
     with gzip.open(file_name, 'wb') as f:
         f.write(html)
@@ -50,7 +50,7 @@ class WebCache(object):
             os.makedirs(self.path)
         
     def get(self, url: str, refresh=False):
-        file_name = '{}/{}.gz'.format(self.path, fnv1a_64(url))
+        file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_64(url)))
         if os.path.exists(file_name):
             creation_time = time.ctime(os.path.getmtime(file_name))
             alive_time = time.time()-creation_time

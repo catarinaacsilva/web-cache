@@ -16,7 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
-def fnv1a_64(string: str, seed=0: int):
+def fnv1a_64(string: str, seed=0):
 	"""
 	Returns: The FNV-1a (alternate) hash of a given string
 	"""
@@ -41,7 +41,7 @@ def load_url(url: str, path: str, driver: webdriver):
 
 
 class WebCache(object):
-    def __init__(self, path='/tmp/webcache': str, ttl=24*3600: int):
+    def __init__(self, path='/tmp/webcache', ttl=24*3600):
         self.path = path
         self.ttl = ttl
         options = Options()
@@ -51,7 +51,7 @@ class WebCache(object):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         
-    def get(url: str, refresh=False: bool):
+    def get(url: str, refresh=False):
         file_name = '{}/{}.gz'.format(self.path, fnv1a_64(url))
         if os.path.exists(file_name):
             creation_time = time.ctime(os.path.getmtime(file_name))

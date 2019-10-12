@@ -34,7 +34,7 @@ def fnv1a_32(string: str, seed=0):
 def load_url(url: str, path: str, driver: webdriver):
     file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    with gzip.open(file_name, 'wb') as f:
+    with gzip.open(file_name, 'w') as f:
         f.write(html)
     return html
 
@@ -58,7 +58,7 @@ class WebCache(object):
                 html = load_url(url, self.path, self.driver)
             else:
                 html = None
-                with gzip.open(file_name, 'rb') as f:
+                with gzip.open(file_name, 'r') as f:
                     html = f.read()
         else:
             html = load_url(url, self.path, self.driver)

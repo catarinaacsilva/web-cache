@@ -54,7 +54,7 @@ class WebCache(object):
         if os.path.exists(file_name):
             creation_time = os.path.getmtime(file_name)
             alive_time = time.time()-creation_time
-            if alive_time > ttl:
+            if alive_time > self.ttl:
                 html = load_url(url, self.path, self.driver)
             else:
                 html = None

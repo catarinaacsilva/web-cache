@@ -17,19 +17,19 @@ from selenium.webdriver.firefox.options import Options
 
 
 def fnv1a_64(string: str, seed=0):
-	"""
-	Returns: The FNV-1a (alternate) hash of a given string
-	"""
-	#Constants
-	FNV_prime = 1099511628211
-	offset_basis = 14695981039346656037
+    """
+    Returns: The FNV-1a (alternate) hash of a given string
+    """
+    #Constants
+    FNV_prime = 1099511628211
+    offset_basis = 14695981039346656037
 
-	#FNV-1a Hash Function
-	hash = offset_basis + seed
-	for char in string:
-		hash = hash ^ ord(char)
- 		hash = hash * FNV_prime
-	return hash
+    #FNV-1a Hash Function
+    hash = offset_basis + seed
+    for char in string:
+        hash = hash ^ ord(char)
+        hash = hash * FNV_prime
+    return hash
 
 
 def load_url(url: str, path: str, driver: webdriver):

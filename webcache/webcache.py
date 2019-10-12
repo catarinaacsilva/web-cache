@@ -38,9 +38,10 @@ def load_url(url: str, path: str, driver: webdriver):
     logger.debug('Load %s and store it on %s', url, path)
     file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
     logger.debug('Filename = %s', file_name)
+    driver.get(url)
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
     logger.debug('HTML = %s', html)
-    with gzip.open(file_name, 'w') as f:
+    with gzip.open(file_name, 'wt') as f:
         f.write(html)
     return html
 
@@ -64,7 +65,7 @@ class WebCache(object):
                 html = load_url(url, self.path, self.driver)
             else:
                 html = None
-                with gzip.open(file_name, 'r') as f:
+                with gzip.open(file_name, 'rt') as f:
                     html = f.read()
         else:
             html = load_url(url, self.path, self.driver)

@@ -49,7 +49,7 @@ class WebCache(object):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         
-    def get(url: str, refresh=False):
+    def get(self, url: str, refresh=False):
         file_name = '{}/{}.gz'.format(self.path, fnv1a_64(url))
         if os.path.exists(file_name):
             creation_time = time.ctime(os.path.getmtime(file_name))

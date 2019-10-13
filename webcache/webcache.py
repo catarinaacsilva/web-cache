@@ -11,11 +11,22 @@ import logging
 import os
 import time
 import gzip
+import threading
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
 logger = logging.getLogger('WC')
+
+
+def synchronized(func):
+    func.__lock__ = threading.Lock()
+            
+    def synced_func(*args, **kws):
+        with func.__lock__:
+            return func(*args, **kws)
+
+    return synced_func
 
 
 def fnv1a_32(string: str, seed=0):
@@ -55,10 +66,14 @@ class WebCache(object):
         self.driver = webdriver.Firefox(options=options)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
-        
+    
+    @synchronized 
     def get(self, url: str, refresh=False):
         file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_32(url)))
-        if os.path.exists(file_name):
+        
+        if refresh:
+            html = load_url(url, self.path, self.driver)
+        elif os.path.exists(file_name):
             creation_time = os.path.getmtime(file_name)
             alive_time = time.time()-creation_time
             if alive_time > self.ttl:

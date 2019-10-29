@@ -19,16 +19,6 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger('WC')
 
 
-def synchronized(func):
-    func.__lock__ = threading.Lock()
-            
-    def synced_func(*args, **kws):
-        with func.__lock__:
-            return func(*args, **kws)
-
-    return synced_func
-
-
 def fnv1a_32(string: str, seed=0):
     """
     Returns: The FNV-1a (alternate) hash of a given string
@@ -66,30 +56,28 @@ class WebCache(object):
         self.driver = webdriver.Firefox(options=options)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
+        self.lock = threading.Lock()
     
-    @synchronized 
     def get(self, url: str, refresh=False):
         file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_32(url)))
         
-        if refresh:
-            html = load_url(url, self.path, self.driver)
-        elif os.path.exists(file_name):
-            creation_time = os.path.getmtime(file_name)
-            alive_time = time.time()-creation_time
-            if alive_time > self.ttl:
+        with self.lock:
+            if refresh:
                 html = load_url(url, self.path, self.driver)
+            elif os.path.exists(file_name):
+                creation_time = os.path.getmtime(file_name)
+                alive_time = time.time()-creation_time
+                if alive_time > self.ttl:
+                    html = load_url(url, self.path, self.driver)
+                else:
+                    html = None
+                    with gzip.open(file_name, 'rt') as f:
+                        html = f.read()
             else:
-                html = None
-                with gzip.open(file_name, 'rt') as f:
-                    html = f.read()
-        else:
-            html = load_url(url, self.path, self.driver)
-
+                html = load_url(url, self.path, self.driver)
+        
         return html
 
     def __del__(self):
         self.driver.stop_client()
         self.driver.close()
-
-
-    

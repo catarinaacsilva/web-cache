@@ -1,1 +1,1 @@
-name = 'webcache'
+from .webcache import webcache

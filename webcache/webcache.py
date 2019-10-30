@@ -38,9 +38,8 @@ def fnv1a_32(string: str, seed=0):
     return hash
 
 
-def load_url(url: str, path: str, driver: webdriver):
-    logger.debug('Load %s and store it on %s', url, path)
-    file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
+def load_url(url: str, file_name: str, driver: webdriver):
+    logger.debug('Load %s and store it on %s', url, file_name)
     logger.debug('Filename = %s', file_name)
     logger.debug('GET RAW HTML...')
     user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
@@ -55,8 +54,14 @@ def load_url(url: str, path: str, driver: webdriver):
         img = f.read()
     os.remove('/tmp/screenshot.png')
     data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
-    with bz2.BZ2File('smallerfile', 'w') as f:
+    with bz2.BZ2File(file_name, 'w') as f:
         pickle.dump(data, f)
+    return data
+
+
+def load_compressed_file(file_name: str):
+    with bz2.BZ2File(file_name, 'r') as f:
+        data = pickle.load(f)
     return data
 
 
@@ -79,15 +84,13 @@ class WebCache(object):
                 html = load_url(url, self.path, self.driver)
             elif os.path.exists(file_name):
                 creation_time = os.path.getmtime(file_name)
-                alive_time = time.time()-creation_time
+                alive_time = time.time() - creation_time
                 if alive_time > self.ttl:
-                    html = load_url(url, self.path, self.driver)
+                    html = load_url(url, file_name, self.driver)
                 else:
-                    html = None
-                    with gzip.open(file_name, 'rt') as f:
-                        html = f.read()
+                    html = load_compressed_file(file_name)
             else:
-                html = load_url(url, self.path, self.driver)
+                html = load_url(url, file_name, self.driver)
         return html
 
     def __del__(self):

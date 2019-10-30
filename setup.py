@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="webcache",
-    version="0.0.1",
+    version="0.0.2",
     author="Catarina Silva",
     author_email="c.alexandracorreia@ua.pt",
     description="Web cache library",
@@ -19,5 +19,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['selenium>=3.141.0'],
+    install_requires=['selenium>=3.141.0', 'requests>=2.22.0'],
 )

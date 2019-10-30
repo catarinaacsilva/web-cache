@@ -2,16 +2,19 @@
 
 
 __author__ = 'Catarina Silva'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __email__ = 'c.alexandracorreia@ua.pt'
 __status__ = 'Development'
 
 
-import logging
 import os
+import bz2
 import time
-import gzip
+import pickle
+import logging
+import requests
 import threading
+
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
@@ -39,12 +42,22 @@ def load_url(url: str, path: str, driver: webdriver):
     logger.debug('Load %s and store it on %s', url, path)
     file_name = '{}/{}.gz'.format(path, hex(fnv1a_32(url)))
     logger.debug('Filename = %s', file_name)
+    logger.debug('GET RAW HTML...')
+    user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
+    html_raw = requests.get(url, headers = user_agent)
+    logger.debug('GET Rendered HTML...')
     driver.get(url)
-    html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    logger.debug('HTML = %s', html)
-    with gzip.open(file_name, 'wt') as f:
-        f.write(html)
-    return html
+    html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    logger.debug('Generate HTML screenshot...')
+    driver.save_screenshot('/tmp/screenshot.png')
+    logger.debug('Load screenshot...')
+    with open('/tmp/screenshot.png', 'rb') as f:
+        img = f.read()
+    os.remove('/tmp/screenshot.png')
+    data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
+    with bz2.BZ2File('smallerfile', 'w') as f:
+        pickle.dump(data, f)
+    return data
 
 
 class WebCache(object):
@@ -75,7 +88,6 @@ class WebCache(object):
                         html = f.read()
             else:
                 html = load_url(url, self.path, self.driver)
-        
         return html
 
     def __del__(self):

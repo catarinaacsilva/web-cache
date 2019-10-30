@@ -79,7 +79,7 @@ class WebCache(object):
         self.lock = threading.Lock()
     
     def get(self, url: str, refresh=False):
-        file_name = '{}/{}.gz'.format(self.path, hex(fnv1a_32(url)))
+        file_name = '{}/{}.bz2'.format(self.path, hex(fnv1a_32(url)))
         
         with self.lock:
             if refresh:

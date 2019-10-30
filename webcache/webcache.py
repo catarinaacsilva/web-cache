@@ -60,6 +60,7 @@ def load_url(url: str, file_name: str, driver: webdriver):
 
 
 def load_compressed_file(file_name: str):
+    logger.debug('Load compressed file %s', file_name)
     with bz2.BZ2File(file_name, 'r') as f:
         data = pickle.load(f)
     return data

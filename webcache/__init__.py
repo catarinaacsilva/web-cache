@@ -1,2 +1,2 @@
 name = 'web-cache'
-from webcache.webcache import webcache
+from webcache import webcache

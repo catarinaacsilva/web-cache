@@ -43,7 +43,8 @@ def load_url(url: str, file_name: str, driver: webdriver):
     logger.debug('Filename = %s', file_name)
     logger.debug('GET RAW HTML...')
     user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
-    html_raw = requests.get(url, headers = user_agent)
+    reply = requests.get(url, headers = user_agent)
+    html_raw = reply.text
     logger.debug('GET Rendered HTML...')
     driver.get(url)
     html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")

@@ -44,7 +44,7 @@ def load_url(url: str, file_name: str, driver: webdriver):
     try:
         logger.debug('GET RAW HTML...')
         user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
-        reply = requests.get(url, headers = user_agent)
+        reply = requests.get(url, headers = user_agent, verify=False, allow_redirects=True)
         html_raw = reply.text
         logger.debug('GET Rendered HTML...')
         driver.get(url)

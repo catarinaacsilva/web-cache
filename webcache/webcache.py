@@ -59,7 +59,9 @@ def load_url(url: str, file_name: str, driver: webdriver):
         with bz2.BZ2File(file_name, 'w') as f:
             pickle.dump(data, f)
         return data
-    except TimeoutException as ex:
+    except:
+        if os.path.isfile(file_name):
+            os.remove(file_name)
         return None
 
 

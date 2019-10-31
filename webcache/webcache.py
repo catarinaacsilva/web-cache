@@ -41,23 +41,26 @@ def fnv1a_32(string: str, seed=0):
 def load_url(url: str, file_name: str, driver: webdriver):
     logger.debug('Load %s and store it on %s', url, file_name)
     logger.debug('Filename = %s', file_name)
-    logger.debug('GET RAW HTML...')
-    user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
-    reply = requests.get(url, headers = user_agent)
-    html_raw = reply.text
-    logger.debug('GET Rendered HTML...')
-    driver.get(url)
-    html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
-    logger.debug('Generate HTML screenshot...')
-    driver.save_screenshot('/tmp/screenshot.png')
-    logger.debug('Load screenshot...')
-    with open('/tmp/screenshot.png', 'rb') as f:
-        img = f.read()
-    os.remove('/tmp/screenshot.png')
-    data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
-    with bz2.BZ2File(file_name, 'w') as f:
-        pickle.dump(data, f)
-    return data
+    try:
+        logger.debug('GET RAW HTML...')
+        user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
+        reply = requests.get(url, headers = user_agent)
+        html_raw = reply.text
+        logger.debug('GET Rendered HTML...')
+        driver.get(url)
+        html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+        logger.debug('Generate HTML screenshot...')
+        driver.save_screenshot('/tmp/screenshot.png')
+        logger.debug('Load screenshot...')
+        with open('/tmp/screenshot.png', 'rb') as f:
+            img = f.read()
+        os.remove('/tmp/screenshot.png')
+        data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
+        with bz2.BZ2File(file_name, 'w') as f:
+            pickle.dump(data, f)
+        return data
+    except TimeoutException as ex:
+        return None
 
 
 def load_compressed_file(file_name: str):

@@ -20,5 +20,5 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=['selenium>=3.141.0', 'requests>=2.22.0',
-    'git+https://github.com/catarinaacsilva/check-https-utils.git'],
+    'git+https://github.com/catarinaacsilva/check-https-utils.git#egg=check_https_utils'],
 )

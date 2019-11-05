@@ -12,11 +12,11 @@ import bz2
 import time
 import pickle
 import logging
-import requests
 import threading
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from check_https_utils import fetch_raw_html, fetch_rendered_html
 
 
 logger = logging.getLogger('WC')
@@ -43,18 +43,19 @@ def load_url(url: str, file_name: str, driver: webdriver):
     logger.debug('Filename = %s', file_name)
     try:
         logger.debug('GET RAW HTML...')
-        user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'}
-        reply = requests.get(url, headers = user_agent, verify=False, allow_redirects=True)
-        html_raw = reply.text
+        html_raw = fetch_raw_html(url)
         logger.debug('GET Rendered HTML...')
-        driver.get(url)
-        html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+        html_rendered = fetch_rendered_html(url, driver)
         logger.debug('Generate HTML screenshot...')
-        driver.save_screenshot('/tmp/screenshot.png')
-        logger.debug('Load screenshot...')
-        with open('/tmp/screenshot.png', 'rb') as f:
-            img = f.read()
-        os.remove('/tmp/screenshot.png')
+        element = driver.find_element_by_tag_name('body')
+        img = element.screenshot_as_png
+        #with open("test2.png", "wb") as file:
+        #    file.write(element_png)
+        #driver.save_screenshot('/tmp/screenshot.png')
+        #logger.debug('Load screenshot...')
+        #with open('/tmp/screenshot.png', 'rb') as f:
+        #    img = f.read()
+        #os.remove('/tmp/screenshot.png')
         data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
         with bz2.BZ2File(file_name, 'w') as f:
             pickle.dump(data, f)

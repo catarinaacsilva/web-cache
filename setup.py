@@ -19,5 +19,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['selenium>=3.141.0', 'requests>=2.22.0'],
+    install_requires=['selenium>=3.141.0', 'requests>=2.22.0',
+    'git+https://github.com/catarinaacsilva/check-https-utils.git'],
 )

@@ -12,11 +12,16 @@ import bz2
 import time
 import pickle
 import logging
+import requests
 import threading
+
+from bs4 import BeautifulSoup as bs
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from check_https_utils import fetch_raw_html, fetch_rendered_html
+
+
+USER_AGENT_LINUX_FIREFOX55 = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'
 
 
 logger = logging.getLogger('WC')
@@ -36,6 +41,50 @@ def fnv1a_32(string: str, seed=0):
         hash = hash ^ ord(char)
         hash = hash * FNV_prime
     return hash
+
+
+def meta_redirect(content):
+    soup  = bs(content, features='html.parser')
+    result_upper = soup.select_one('meta[HTTP-EQUIV="REFRESH"]')
+    result_lower = soup.select_one('meta[http-equiv="refresh"]')
+    
+    if result_upper:
+        wait,text=result_upper["content"].split(";")
+        if text.strip().startswith("url="):
+            url=text[5:]
+            return url
+    
+    if result_lower:
+        wait,text=result_lower["content"].split(";")
+        if text.strip().startswith("url="):
+            url=text[5:]
+            return url
+    
+    return None
+​
+​
+def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_FIREFOX55):
+    header = {'User-agent': user_agent}
+    reply = requests.get(url, headers = header, verify=False, allow_redirects=True)
+​
+    if reply.status_code == 200:
+        redirect_url = meta_redirect(reply.text)
+        if redirect_url:
+            return fetch_raw_html(redirect_url, user_agent)
+        else:
+            return reply.text
+    else:
+        return None
+
+
+def fetch_rendered_html(url: str, driver: webdriver):
+    driver.get(url)
+    html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    redirect_url = meta_redirect(html_rendered)
+    if redirect_url:
+        return fetch_rendered_html(redirect_url, driver)
+    else:
+        return html_rendered
 
 
 def load_url(url: str, file_name: str, driver: webdriver):

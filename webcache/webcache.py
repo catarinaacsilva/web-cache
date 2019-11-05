@@ -62,11 +62,11 @@ def meta_redirect(content):
     
     return None
 
-​
+    
 def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_FIREFOX55):
     header = {'User-agent': user_agent}
     reply = requests.get(url, headers = header, verify=False, allow_redirects=True)
-​
+
     if reply.status_code == 200:
         redirect_url = meta_redirect(reply.text)
         if redirect_url:

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="web_cache",
+    name="webcache",
     version="0.0.2",
     author="Catarina Silva",
     author_email="c.alexandracorreia@ua.pt",

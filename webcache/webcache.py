@@ -18,10 +18,11 @@ import threading
 from bs4 import BeautifulSoup as bs
 
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 
 
 USER_AGENT_LINUX_FIREFOX55 = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0'
+USER_AGENT_LINUX_CHROME = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/78.0.3904.70 Chrome/78.0.3904.70 Safari/537.36'
 
 
 logger = logging.getLogger('WC')
@@ -63,7 +64,7 @@ def meta_redirect(content):
     return None
 
     
-def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_FIREFOX55):
+def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_CHROME):
     header = {'User-agent': user_agent}
     reply = requests.get(url, headers = header, verify=False, allow_redirects=True)
 
@@ -128,7 +129,7 @@ class WebCache(object):
         self.ttl = ttl
         options = Options()
         options.headless = True
-        self.driver = webdriver.Firefox(options=options)
+        self.driver = webdriver.Chrome(options=options)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         self.lock = threading.Lock()

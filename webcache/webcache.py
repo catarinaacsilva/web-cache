@@ -10,6 +10,7 @@ __status__ = 'Development'
 import os
 import bz2
 import time
+import string
 import pickle
 import logging
 import requests

@@ -28,6 +28,7 @@ USER_AGENT_LINUX_CHROME = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (K
 logger = logging.getLogger('WC')
 
 
+# legacy code...
 def fnv1a_32(string: str, seed=0):
     """
     Returns: The FNV-1a (alternate) hash of a given string
@@ -44,6 +45,42 @@ def fnv1a_32(string: str, seed=0):
     return hash
 
 
+# new code to deal with name creation
+def format_filename(s: str):
+    """Take a string and return a valid filename constructed from the string.
+Uses a whitelist approach: any characters not present in valid_chars are
+removed. Also spaces are replaced with underscores.
+ 
+Note: this method may produce invalid filenames such as ``, `.` or `..`
+When I use this method I prepend a date string like '2009_01_15_19_46_32_'
+and append a file extension like '.txt', so I avoid the potential of using
+an invalid filename.
+ 
+"""
+    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    filename = ''.join(c for c in s if c in valid_chars)
+    filename = filename.replace(' ','_') # I don't like spaces in filenames.
+    return filename
+
+
+def get_request(url: str, timeout: int, headers={}):
+    try:
+        response = requests.get(url, headers = header, verify=False, allow_redirects=True, timeout = timeout)
+        return response
+    except Exception as e:
+        logger.warning(e)
+        return None
+
+
+def get_header(url: str, timeout: int, headers={}):
+    try:
+        headers = requests.head(url, headers = header, verify=False, allow_redirects=True, timeout = timeout)
+    except Exception as e:
+        logger.warning(e)
+        return None
+
+
+# HTML meta redirect
 def meta_redirect(content):
     soup  = bs(content, features='html.parser')
     result_upper = soup.select_one('meta[HTTP-EQUIV="REFRESH"]')
@@ -64,11 +101,12 @@ def meta_redirect(content):
     return None
 
     
-def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_CHROME):
-    header = {'User-agent': user_agent}
-    reply = requests.get(url, headers = header, verify=False, allow_redirects=True)
+def fetch_raw_html(url: str, timeout: int, user_agent=USER_AGENT_LINUX_CHROME):
+    headers = {'User-agent': user_agent}
+    #reply = requests.get(url, headers = header, verify=False, allow_redirects=True)
+    reply = get_request(url, timeout)
 
-    if reply.status_code == 200:
+    if reply is not None and reply.status_code == 200:
         redirect_url = meta_redirect(reply.text)
         if redirect_url:
             return fetch_raw_html(redirect_url, user_agent)
@@ -80,7 +118,8 @@ def fetch_raw_html(url: str, user_agent=USER_AGENT_LINUX_CHROME):
 
 def fetch_rendered_html(url: str, driver: webdriver):
     driver.get(url)
-    html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    #html_rendered = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+    html_rendered = driver.page_source
     redirect_url = meta_redirect(html_rendered)
     if redirect_url:
         return fetch_rendered_html(redirect_url, driver)
@@ -88,12 +127,12 @@ def fetch_rendered_html(url: str, driver: webdriver):
         return html_rendered
 
 
-def load_url(url: str, file_name: str, driver: webdriver):
+def load_url(url: str, filename: str, driver: webdriver, timeout: int):
     logger.debug('Load %s and store it on %s', url, file_name)
     logger.debug('Filename = %s', file_name)
     try:
         logger.debug('GET RAW HTML...')
-        html_raw = fetch_raw_html(url)
+        html_raw = fetch_raw_html(url, timeout)
         logger.debug('GET Rendered HTML...')
         html_rendered = fetch_rendered_html(url, driver)
         logger.debug('Generate HTML screenshot...')
@@ -107,48 +146,51 @@ def load_url(url: str, file_name: str, driver: webdriver):
         #    img = f.read()
         #os.remove('/tmp/screenshot.png')
         data = {'html_raw': html_raw, 'html_rendered': html_rendered, 'img': img}
-        with bz2.BZ2File(file_name, 'w') as f:
+        with bz2.BZ2File(filename, 'w') as f:
             pickle.dump(data, f)
         return data
-    except:
-        if os.path.isfile(file_name):
-            os.remove(file_name)
+    except Exception as e:
+        logger.warning(e)
+        if os.path.isfile(filename):
+            os.remove(filename)
         return None
 
 
-def load_compressed_file(file_name: str):
-    logger.debug('Load compressed file %s', file_name)
-    with bz2.BZ2File(file_name, 'r') as f:
+def load_compressed_file(filename: str):
+    logger.debug('Load compressed file %s', filename)
+    with bz2.BZ2File(filename, 'r') as f:
         data = pickle.load(f)
     return data
 
 
 class WebCache(object):
-    def __init__(self, path='/tmp/webcache', ttl=24*3600):
+    def __init__(self, path='/tmp/webcache', ttl=24*3600, timeout=10):
         self.path = path
         self.ttl = ttl
+        self.timeout = timeout
         options = Options()
         options.headless = True
         self.driver = webdriver.Chrome(options=options)
+        self.driver.maximize_window()
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         self.lock = threading.Lock()
     
     def get(self, url: str, refresh=False):
-        file_name = '{}/{}.bz2'.format(self.path, hex(fnv1a_32(url)))
+        filename = '{}/{}.bz2'.format(self.path, format_filename(url))
         
         with self.lock:
             if refresh:
-                html = load_url(url, self.path, self.driver)
+                html = load_url(url, filename, self.driver, self.timeout)
             elif os.path.exists(file_name):
-                creation_time = os.path.getmtime(file_name)
+                creation_time = os.path.getmtime(filename)
                 alive_time = time.time() - creation_time
                 if alive_time > self.ttl:
-                    html = load_url(url, file_name, self.driver)
+                    html = load_url(url, filename, self.driver, self.timeout)
                 else:
-                    html = load_compressed_file(file_name)
+                    html = load_compressed_file(filename)
             else:
-                html = load_url(url, file_name, self.driver)
+                html = load_url(url, filename, self.driver, self.timeout)
         return html
 
     def __del__(self):

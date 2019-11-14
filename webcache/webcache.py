@@ -129,8 +129,8 @@ def fetch_rendered_html(url: str, driver: webdriver):
 
 
 def load_url(url: str, filename: str, driver: webdriver, timeout: int):
-    logger.debug('Load %s and store it on %s', url, file_name)
-    logger.debug('Filename = %s', file_name)
+    logger.debug('Load %s and store it on %s', url, filename)
+    logger.debug('Filename = %s', filename)
     try:
         logger.debug('GET RAW HTML...')
         html_raw = fetch_raw_html(url, timeout)
@@ -183,7 +183,7 @@ class WebCache(object):
         with self.lock:
             if refresh:
                 html = load_url(url, filename, self.driver, self.timeout)
-            elif os.path.exists(file_name):
+            elif os.path.exists(filename):
                 creation_time = os.path.getmtime(filename)
                 alive_time = time.time() - creation_time
                 if alive_time > self.ttl:

@@ -66,16 +66,17 @@ an invalid filename.
 
 def get_request(url: str, timeout: int, headers={}):
     try:
-        response = requests.get(url, headers = header, verify=False, allow_redirects=True, timeout = timeout)
+        response = requests.get(url, headers = headers, verify=False, allow_redirects=True, timeout = timeout)
         return response
     except Exception as e:
         logger.warning(e)
         return None
 
 
-def get_header(url: str, timeout: int, headers={}):
+def get_head(url: str, timeout: int, headers={}):
     try:
-        headers = requests.head(url, headers = header, verify=False, allow_redirects=True, timeout = timeout)
+        head = requests.head(url, headers = headers, verify=False, allow_redirects=True, timeout = timeout)
+        return head
     except Exception as e:
         logger.warning(e)
         return None

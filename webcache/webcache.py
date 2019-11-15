@@ -69,7 +69,7 @@ def get_request(url: str, timeout: int, headers={}):
         response = requests.get(url, headers = headers, verify=False, allow_redirects=True, timeout = timeout)
         return response
     except Exception as e:
-        logger.warning(e)
+        logger.debug(e)
         return None
 
 
@@ -78,7 +78,7 @@ def get_head(url: str, timeout: int, headers={}):
         head = requests.head(url, headers = headers, verify=False, allow_redirects=True, timeout = timeout)
         return head
     except Exception as e:
-        logger.warning(e)
+        logger.debug(e)
         return None
 
 
@@ -137,9 +137,10 @@ def load_url(url: str, filename: str, driver: webdriver, timeout: int):
         html_raw = fetch_raw_html(url, timeout)
         logger.debug('GET Rendered HTML...')
         html_rendered = fetch_rendered_html(url, driver)
-        logger.debug('Generate HTML screenshot...')
-        element = driver.find_element_by_tag_name('body')
-        img = element.screenshot_as_png
+        #logger.debug('Generate HTML screenshot...')
+        #element = driver.find_element_by_tag_name('body')
+        #img = element.screenshot_as_png
+        img = None
         #with open("test2.png", "wb") as file:
         #    file.write(element_png)
         #driver.save_screenshot('/tmp/screenshot.png')
@@ -166,14 +167,14 @@ def load_compressed_file(filename: str):
 
 
 class WebCache(object):
-    def __init__(self, path='/tmp/webcache', ttl=24*3600, timeout=10):
+    def __init__(self, path='/tmp/webcache', ttl=24*3600, timeout=30):
         self.path = path
         self.ttl = ttl
         self.timeout = timeout
         options = Options()
         options.headless = True
         self.driver = webdriver.Chrome(options=options)
-        self.driver.maximize_window()
+        #self.driver.maximize_window()
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         self.lock = threading.Lock()
